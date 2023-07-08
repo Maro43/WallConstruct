@@ -1,5 +1,6 @@
 package main.java;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -10,30 +11,15 @@ public class Wall implements Structure {
 
     @Override
     public Optional<Block> findBlockByColor(String color) {
-        return blocks.stream()
-                .filter(block -> {
-                    String blockColor = block.getColor();
-                    return blockColor != null && blockColor.equals(color) ||
-                            (block instanceof CompositeBlock && findByColor((CompositeBlock) block, color).isPresent());
-                })
-                .findAny();
+        return findByColor(blocks, color);
     }
 
     @Override
     public List<Block> findBlocksByMaterial(String material) {
-            return blocks.stream()
-                    .flatMap(block -> {
-                        String blockMaterial = block.getMaterial();
-                        if (blockMaterial != null && blockMaterial.equals(material)) {
-                            return Stream.of(block);
-                        } else if (block instanceof CompositeBlock) {
-                            return findByMaterial((CompositeBlock) block, material).stream();
-                        } else {
-                            return Stream.empty();
-                        }
-                    })
-                    .toList();
-        }
+        return blocks.stream()
+                .flatMap(block -> findByMaterial(block, material).stream())
+                .toList();
+    }
 
     @Override
     public int count () {
@@ -44,29 +30,35 @@ public class Wall implements Structure {
         return count;
     }
 
-    private Optional<Block> findByColor(CompositeBlock compositeBlock, String color) {
-        return compositeBlock.getBlocks().stream()
-                .filter(block -> {
-                    String blockColor = block.getColor();
-                    return blockColor != null && blockColor.equals(color) ||
-                            (block instanceof CompositeBlock && findByColor((CompositeBlock) block, color).isPresent());
-                })
-                .findFirst();
+    private Optional<Block> findByColor(List <Block> blocks, String color) {
+        for (Block block : blocks) {
+            String blockColor = block.getColor();
+            if (blockColor != null && blockColor.equals(color)) {
+                return Optional.of(block);
+            } else if (block instanceof CompositeBlock) {
+                Optional<Block> result = findByColor(((CompositeBlock) block).getBlocks(), color);
+                if (result.isPresent()) {
+                    return result;
+                }
+            }
+        }
+        return Optional.empty();
     }
 
-    private List<Block> findByMaterial(CompositeBlock compositeBlock, String material) {
-        return compositeBlock.getBlocks().stream()
-                .flatMap(block -> {
-                    String blockMaterial = block.getMaterial();
-                    if (blockMaterial != null && blockMaterial.equals(material)) {
-                        return Stream.of(block);
-                    } else if (block instanceof CompositeBlock) {
-                        return findByMaterial((CompositeBlock) block, material).stream();
-                    } else {
-                        return Stream.empty();
-                    }
-                })
-                .toList();
+    private List<Block> findByMaterial(Block block, String material) {
+        List<Block> result = new ArrayList<>();
+
+        if (block.getMaterial() != null && block.getMaterial().equals(material)) {
+            result.add(block);
+        }
+
+        if (block instanceof CompositeBlock) {
+            CompositeBlock compositeBlock = (CompositeBlock) block;
+            for (Block subBlock : compositeBlock.getBlocks()) {
+                result.addAll(findByMaterial(subBlock, material));
+            }
+        }
+        return result;
     }
 
     private int countBlocks (Block block){
