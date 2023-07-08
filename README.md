@@ -22,7 +22,3 @@ Założyłem, że CompositeBlock może zawierać listę elementów block oraz Co
 Po napisaniu metody count oraz jej rekurencji zwróciłem uwagę, że 2 pierwsze metody 
 równiez mogą zawierać CompositeBlock i w nich również metoda powinna uwzględnić
 poszukiwania w CompositeBlock.
-
-Do rozwiązania problemu posłużyłem się stream. Metody oraz ich rekurencje są w stream.
-W metodach rekurencji w stream zastosowałem .filtr oraz operatory AND i OR 
-do wywołania rekurencji podczas streamu.
